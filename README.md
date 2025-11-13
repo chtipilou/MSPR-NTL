@@ -5,11 +5,12 @@ TODO :
 
 Grafana ❌
 2 AD ❌
+Database : MySQL ❌
 Scripts : 
  - Module Diagnostique ❌
  - Module Sauvegarde WMS ❌
  - Module d'audit d’obsolescence ❌
-Database : MySQL ❌
+
 
 Doc : 
 - Manuel d'installation / utilisation
