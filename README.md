@@ -3,13 +3,14 @@ MSPR NordTransit Logistics (NTL)
 
 TODO : 
 
-Grafana ❌
-2 AD ❌
+Grafana ✅
+2 AD ✅
 pfSense ❌
-Database : MySQL ❌
+Database : MySQL ✅
 Scripts : 
- - Module Diagnostique ❌
- - Module Sauvegarde WMS ❌
+ - Module Diagnostique ✅
+ - Module Sauvegarde WMS ✅
+ - Module sélecteur cli ❌
  - Module d'audit d’obsolescence ❌
 
 
