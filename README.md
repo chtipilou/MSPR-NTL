@@ -10,7 +10,7 @@ Database : MySQL ✅
 Scripts : 
  - Module Diagnostique ✅
  - Module Sauvegarde WMS ✅
- - Module sélecteur cli ❌
+ - Module sélecteur cli ✅
  - Module d'audit d’obsolescence ❌
 
 
