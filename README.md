@@ -18,3 +18,14 @@ Doc :
 - Manuel d'installation / utilisation
 - Dossier technique
 
+Scripts python : 
+
+cd /root
+
+activer l'environement python virtuel :
+
+source .venv/bin/activate
+python3 selecteur.py
+
+
+
