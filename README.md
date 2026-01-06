@@ -5,13 +5,13 @@ TODO :
 
 Grafana ✅
 2 AD ✅
-pfSense ❌
+pfSense ✅
 Database : MySQL ✅
 Scripts : 
  - Module Diagnostique ✅
  - Module Sauvegarde WMS ✅
  - Module sélecteur cli ✅
- - Module d'audit d’obsolescence ❌
+ - Module d'audit d’obsolescence ✅
 
 
 Doc : 
