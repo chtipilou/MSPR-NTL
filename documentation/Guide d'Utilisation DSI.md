@@ -95,4 +95,28 @@ Outil de gestion du cycle de vie du parc informatique.
 
 *Dernière mise à jour : Janvier 2026 - DSI NordTransit Logistics*
 
-**Souhaitez-vous que je génère le fichier `requirements.txt` correspondant à ces scripts ?**
+Guide du lancement des scripts
+
+Vérifier que la version que python était bien installé :
+
+python3 --version
+pip3 --version
+<img width="772" height="102" alt="image" src="https://github.com/user-attachments/assets/fbecaa0d-62ce-42ba-a366-85f8d119fcf3" />
+
+
+
+Ce connecter ne tant que root :
+
+su   (mspr25@)
+
+cd /root
+
+Activer l'environement python virtuel :
+
+source .venv/bin/activate 
+
+python3 selecteur.py
+<img width="650" height="162" alt="image" src="https://github.com/user-attachments/assets/1b60c6f8-77fe-46ff-8ede-d2907dbe6054" />
+
+
+
