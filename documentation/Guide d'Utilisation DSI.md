@@ -1,74 +1,38 @@
+
 # 🛠️ NTL-SysToolbox : Guide d'Utilisation DSI
 
 Ce dépôt contient la suite d'outils d'administration pour la maintenance, le diagnostic et l'audit de l'infrastructure de **NordTransit Logistics**.
 
 ---
 
-## 🚀 Lancement Rapide
-
-Pour accéder à l'interface unifiée et éviter de lancer les scripts manuellement, utilisez le sélecteur interactif :
-
-```bash
-python selecteur.py
-
-```
-
-* **Navigation** : Utilisez les flèches du clavier pour choisir un module.
-* **Validation** : Appuyez sur `Entrée` pour exécuter le script sélectionné.
-
----
-
-## 📋 Présentation des Modules
+## 🚀 Présentation des Modules
 
 ### 1. Diagnostic Infrastructure (`diagnostique_infra.py`)
 
 Ce module effectue un bilan de santé instantané des serveurs critiques.
 
-* **Fonctionnalités** :
-* Vérification de la disponibilité des ports (SSH, HTTPS, LDAP, RDP, MySQL).
-* Test de connexion applicative avancé au serveur de base de données.
-* Identification précise des services hors-ligne.
-
-
-* **Résultats** :
-* **Console** : Résumé visuel avec icônes de statut (✓ OK, ⚠ Partiel, ✗ Hors-ligne).
-* **Fichier** : Rapport détaillé généré dans `/rapports_ntl/` au format JSON.
-
-
+* **Fonctionnalités** : Vérification de la disponibilité des ports (SSH, HTTPS, LDAP, RDP, MySQL) et test de connexion applicative avancé au serveur de base de données.
+* **Résultats** : Un résumé visuel en console et un rapport détaillé généré dans `/rapports_ntl/` au format JSON.
 
 ### 2. Sauvegarde Base de Données (`backup_mysql.py`)
 
 Assure la protection des données du serveur **WMS-DB** (`192.168.1.14`).
 
-* **Fonctionnalités** :
-* Export complet (`--all-databases`) incluant routines, triggers et événements.
-* Mode `--single-transaction` pour garantir la cohérence sans bloquer la production.
-
-
-* **Maintenance** :
+* **Fonctionnalités** : Export complet (`--all-databases`) incluant routines, triggers et événements.
+* **Sécurité** : Utilise le mode `--single-transaction` pour ne pas bloquer la production.
 * **Destination** : Sauvegardes stockées dans le dossier `/backups_mysql/`.
-* **Prérequis** : Nécessite l'installation de `mysql-client` (`mysqldump`).
-* **Sécurité** : Identifiants pré-configurés pour l'utilisateur `root`.
-
-
 
 ### 3. Audit d'Obsolescence & EOL (`audit.py`)
 
 Outil de gestion du cycle de vie du parc informatique.
 
-* **Options de l'Audit** :
-* **Scan Réseau** : Détection active sur `192.168.1.0/24` via scan de ports et inventaire connu.
-* **Analyse Inventaire** : Focus uniquement sur les machines critiques documentées.
-* **Base EOL** : Consultation des dates de fin de support pour Windows, Linux (Ubuntu, Debian, CentOS) et ESXi.
+* **Analyse** : Détection active sur le réseau et croisement avec l'inventaire connu.
+* **Indicateurs de Risque** :
+* 🔴 **CRITIQUE** : Système obsolète (EOL).
+* 🟠 **ÉLEVÉ** : Fin de support < 6 mois.
 
 
-* **Gestion des Risques** :
-* 🔴 **CRITIQUE** : Système obsolète — Migration urgente requise.
-* 🟠 **ÉLEVÉ** : Fin de support à moins de 6 mois.
-* ✅ **OK** : Support actif.
-
-
-* **Export** : Génération automatique d'un rapport **CSV** (`audit_eol_ntl_YYYYMMDD.csv`) pour exploitation sur Excel.
+* **Export** : Génération automatique d'un rapport **CSV** pour exploitation sur Excel.
 
 ---
 
@@ -81,42 +45,54 @@ Outil de gestion du cycle de vie du parc informatique.
 | **WMS-APP** | `192.168.1.15` | Ubuntu 20.04 LTS | Serveur Web applicatif |
 | **GRAFANA** | `192.168.1.13` | Ubuntu 22.04 LTS | Supervision |
 | **PFSENSE** | `192.168.1.1` | pfSense 2.7 | Firewall LAN |
-| **ESXi Host** | `10.10.10.71` | VMware ESXi | Hyperviseur |
 
 ---
 
-## ⚠️ Notes de Sécurité et Maintenance
+## 📖 Guide de lancement des scripts
 
-* **Privilèges** : L'audit réseau (`audit.py`) peut nécessiter des privilèges administrateur pour l'envoi de paquets ICMP/Raw.
-* **Externalisation** : Le script de backup gère uniquement la création locale. Il est impératif de configurer un transfert (SCP/RSYNC) vers un stockage externe (NAS/Cloud).
-* **Dépendances** : Assurez-vous d'avoir installé les bibliothèques `questionary` et `pymysql` via pip avant le premier lancement.
+Suivez ces étapes pour exécuter les outils en toute sécurité sur l'environnement de production.
 
----
+### 1. Vérification des prérequis
 
-*Dernière mise à jour : Janvier 2026 - DSI NordTransit Logistics*
+Assurez-vous que Python et son gestionnaire de paquets sont correctement installés :
 
-Guide du lancement des scripts
-
-Vérifier que la version que python était bien installé :
-
+```bash
 python3 --version
 pip3 --version
-<img width="772" height="102" alt="image" src="https://github.com/user-attachments/assets/fbecaa0d-62ce-42ba-a366-85f8d119fcf3" />
 
+```
 
+### 2. Accès Root et Répertoire
 
-Ce connecter ne tant que root :
+Connectez-vous avec les privilèges d'administrateur et placez-vous dans le répertoire racine :
 
-su   (mspr25@)
-
+```bash
+# Mot de passe : mspr25@
+su - 
 cd /root
 
-Activer l'environement python virtuel :
+```
 
+### 3. Activation de l'environnement et lancement
+
+Pour garantir que toutes les dépendances (comme `questionary` ou `pymysql`) sont disponibles, activez l'environnement virtuel avant de lancer le sélecteur :
+
+```bash
+# Activation de l'environnement virtuel
 source .venv/bin/activate 
 
+# Lancement de l'interface unifiée
 python3 selecteur.py
-<img width="650" height="162" alt="image" src="https://github.com/user-attachments/assets/1b60c6f8-77fe-46ff-8ede-d2907dbe6054" />
 
+```
 
+---
 
+## ⚠️ Notes de Sécurité
+
+* **Externalisation** : Le script de sauvegarde crée des fichiers locaux. Il est impératif de les déplacer vers un stockage externe (NAS/Cloud).
+* **Privilèges** : L'audit réseau nécessite l'accès root pour l'exécution des commandes réseau avancées.
+
+---
+
+*Dernière mise à jour : 8 Janvier  2026 - DSI NordTransit Logistics*
