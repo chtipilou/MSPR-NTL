@@ -11,16 +11,20 @@ Ce dépôt contient la suite d'outils d'administration pour la maintenance, le d
 
 Ce module effectue un bilan de santé instantané des serveurs critiques.
 
-* **Fonctionnalités** : Vérification de la disponibilité des ports (SSH, HTTPS, LDAP, RDP, MySQL) et test de connexion applicative avancé au serveur de base de données.
+* **Fonctionnalités** : 
+  * Vérification de la disponibilité des ports (SSH, HTTPS, LDAP, RDP, MySQL)
+  * Test de connexion applicative avancé au serveur de base de données
+  * Collecte des métriques système via agents (CPU, RAM, Disque, Uptime, OS)
 * **Résultats** : Un résumé visuel en console et un rapport détaillé généré dans `/rapports_ntl/` au format JSON.
 
 ### 2. Sauvegarde Base de Données (`backup_mysql.py`)
 
-Assure la protection des données du serveur **WMS-DB** (`192.168.1.14`).
+Assure la protection des données du serveur WMS-DB.
 
 * **Fonctionnalités** : Export complet (`--all-databases`) incluant routines, triggers et événements.
 * **Sécurité** : Utilise le mode `--single-transaction` pour ne pas bloquer la production.
-* **Destination** : Sauvegardes stockées dans le dossier `/backups_mysql/`.
+* **Configuration** : Utilise les identifiants définis dans `config.yaml`.
+* **Destination** : Sauvegardes stockées dans le dossier configuré (par défaut `/backups_mysql/`).
 
 ### 3. Audit d'Obsolescence & EOL (`audit.py`)
 
@@ -33,6 +37,17 @@ Outil de gestion du cycle de vie du parc informatique.
 
 
 * **Export** : Génération automatique d'un rapport **CSV** pour exploitation sur Excel.
+
+### 4. Agent Système (`ntl_agent.py`)
+
+Agent daemon qui expose les métriques système via TCP.
+
+* **Fonctionnalités** : 
+  * Collecte CPU, RAM, Disque, Uptime, Version OS
+  * Protocole TCP sécurisé avec authentification par token
+  * Support multi-plateforme (Windows & Linux)
+* **Port** : Configurable (par défaut 6000)
+* **Sécurité** : Authentification obligatoire en production
 
 ---
 
@@ -62,27 +77,73 @@ pip3 --version
 
 ```
 
-### 2. Accès Root et Répertoire
+### 2. Installation des dépendances
 
-Connectez-vous avec les privilèges d'administrateur et placez-vous dans le répertoire racine :
+Installez les dépendances requises :
 
 ```bash
-# Mot de passe : mspr25@
-su - 
-cd /root
+pip3 install -r requirements.txt
 
 ```
 
-### 3. Activation de l'environnement et lancement
+### 3. Configuration
 
-Pour garantir que toutes les dépendances (comme `questionary` ou `pymysql`) sont disponibles, activez l'environnement virtuel avant de lancer le sélecteur :
+Copiez le fichier de configuration exemple et configurez vos paramètres :
 
 ```bash
-# Activation de l'environnement virtuel
-source .venv/bin/activate 
+cp config.example.yaml config.yaml
+# Éditez config.yaml avec vos paramètres réels
 
-# Lancement de l'interface unifiée
+```
+
+**Important** : Ne commitez jamais `config.yaml` dans Git. Ce fichier contient des informations sensibles.
+
+Vous pouvez également utiliser des variables d'environnement pour surcharger la configuration :
+
+```bash
+export NTL_MYSQL_PASSWORD="votre_mot_de_passe"
+export NTL_AGENT_TOKEN="votre_token_securise"
+
+```
+
+### 4. Déploiement de l'agent
+
+Sur chaque serveur à monitorer, installez et démarrez l'agent :
+
+```bash
+# Installation
+pip3 install -r requirements.txt
+
+# Démarrage de l'agent (avec token de sécurité)
+python3 ntl_agent.py --port 6000 --token "VOTRE_TOKEN_ICI"
+
+# Ou via variable d'environnement
+export NTL_AGENT_TOKEN="VOTRE_TOKEN_ICI"
+python3 ntl_agent.py
+
+```
+
+Pour exécuter l'agent en tant que service système, consultez le guide d'installation complet.
+
+### 5. Lancement de l'interface unifiée
+
+```bash
+# Lancement du sélecteur de scripts
 python3 selecteur.py
+
+```
+
+Ou exécutez directement les scripts :
+
+```bash
+# Diagnostic complet
+python3 diagnostique_infra.py
+
+# Backup MySQL
+python3 backup_mysql.py
+
+# Audit d'obsolescence
+python3 audit.py
 
 ```
 
@@ -90,9 +151,23 @@ python3 selecteur.py
 
 ## ⚠️ Notes de Sécurité
 
-* **Externalisation** : Le script de sauvegarde crée des fichiers locaux. Il est impératif de les déplacer vers un stockage externe (NAS/Cloud).
+* **Configuration** : Ne stockez jamais de mots de passe en clair dans le code. Utilisez `config.yaml` (non versionné) ou des variables d'environnement.
+* **Agent** : Toujours utiliser un token d'authentification en production. Ne jamais exposer l'agent directement sur Internet.
+* **Externalisation** : Les sauvegardes locales doivent être déplacées vers un stockage externe (NAS/Cloud).
 * **Privilèges** : L'audit réseau nécessite l'accès root pour l'exécution des commandes réseau avancées.
+* **Fichiers sensibles** : Le fichier `config.yaml` est dans `.gitignore` pour éviter de committer des secrets.
 
 ---
 
-*Dernière mise à jour : 8 Janvier  2026 - DSI NordTransit Logistics*
+## 📊 Codes de Retour
+
+Les scripts retournent des codes de sortie standardisés :
+
+* **0** : Succès - Tous les tests ont réussi
+* **1** : Avertissement - Certains problèmes détectés
+* **2** : Erreur critique - Serveurs down ou échec complet
+
+---
+
+*Dernière mise à jour : Janvier 2026 - DSI NordTransit Logistics*
+
