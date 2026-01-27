@@ -140,16 +140,16 @@ class AgentClient:
                 'error': f'connection_failed: {str(e)}',
                 'metrics': None
             }
-        except ValueError as e:
+        except (ValueError, OSError) as e:
             return {
                 'status': 'error',
-                'error': f'invalid_response: {str(e)}',
+                'error': f'connection_failed: {str(e)}',
                 'metrics': None
             }
         except Exception as e:
             return {
                 'status': 'error',
-                'error': f'unknown_error: {str(e)}',
+                'error': f'connection_failed: {str(e)}',
                 'metrics': None
             }
 

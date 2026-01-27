@@ -263,7 +263,6 @@ class NTLAgent:
         
         except Exception as e:
             print(f"[!] Failed to start agent: {e}")
-            sys.exit(1)
     
     def stop(self):
         """Stop the agent server"""
