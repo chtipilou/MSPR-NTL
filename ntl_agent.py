@@ -65,7 +65,7 @@ class SystemMetricsCollector:
                 'min': cpu_freq.min if cpu_freq else None,
                 'max': cpu_freq.max if cpu_freq else None
             }
-        except:
+        except (OSError, AttributeError, NotImplementedError):
             freq_info = {'current': None, 'min': None, 'max': None}
         
         return {

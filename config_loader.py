@@ -75,20 +75,35 @@ class Config:
     
     def get_mysql_config(self) -> Dict[str, Any]:
         """Get MySQL configuration"""
+        try:
+            port = int(self.get('mysql.port', 3306))
+        except (ValueError, TypeError):
+            port = 3306
+        
         return {
             'host': self.get('mysql.host', '192.168.1.14'),
             'user': self.get('mysql.user', 'root'),
             'password': self.get('mysql.password'),
-            'port': int(self.get('mysql.port', 3306)),
+            'port': port,
             'backup_dir': self.get('mysql.backup_dir', 'backups_mysql')
         }
     
     def get_agent_config(self) -> Dict[str, Any]:
         """Get agent configuration"""
+        try:
+            port = int(self.get('agent.port', 6000))
+        except (ValueError, TypeError):
+            port = 6000
+        
+        try:
+            timeout = int(self.get('agent.timeout', 5))
+        except (ValueError, TypeError):
+            timeout = 5
+        
         return {
-            'port': int(self.get('agent.port', 6000)),
+            'port': port,
             'auth_token': self.get('agent.auth_token'),
-            'timeout': int(self.get('agent.timeout', 5))
+            'timeout': timeout
         }
     
     def get_diagnostic_config(self) -> Dict[str, Any]:

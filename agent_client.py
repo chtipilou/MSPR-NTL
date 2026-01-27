@@ -92,7 +92,7 @@ class AgentClient:
                 error_msg = response.get('message', 'Unknown error')
                 raise ValueError(f"Agent returned error: {error_msg}")
                 
-        except Exception as e:
+        except Exception:
             return None
     
     def ping(self) -> bool:
@@ -105,7 +105,7 @@ class AgentClient:
         try:
             response = self._send_request('ping')
             return response.get('status') == 'success'
-        except:
+        except Exception:
             return False
     
     def get_metrics_safe(self) -> Dict[str, Any]:

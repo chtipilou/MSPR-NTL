@@ -22,7 +22,7 @@ def check_tcp_port(host, port, timeout=2):
         result = sock.connect_ex((host, port))
         sock.close()
         return result == 0
-    except:
+    except Exception:
         return False
 
 def test_server(name, ip, ports):
