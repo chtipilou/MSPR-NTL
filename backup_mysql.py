@@ -1,29 +1,43 @@
 #!/usr/bin/env python3
 """
 Script 2 - Backup MySQL Complet Auto
-Sauvegarde TOUTES les bases de 192.168.1.14
+Sauvegarde TOUTES les bases avec configuration centralisée
 """
 
 import subprocess
 import json
+import sys
 from datetime import datetime
 from pathlib import Path
-
-MYSQL_HOST = "192.168.1.14"
-MYSQL_USER = "root"
-MYSQL_PASS = "mspr25@"
+from config_loader import load_config
 
 def backup_all_mysql():
     """Backup complet de TOUTES les bases MySQL"""
+    
+    try:
+        config = load_config()
+    except FileNotFoundError as e:
+        print(f"[✗] ERREUR: {e}")
+        return False
+    except Exception as e:
+        print(f"[✗] ERREUR de configuration: {e}")
+        return False
+    
+    mysql_config = config.get_mysql_config()
+    
+    if not mysql_config.get('password'):
+        print("[✗] ERREUR: Mot de passe MySQL non configuré")
+        print("Veuillez définir le mot de passe dans config.yaml ou via NTL_MYSQL_PASSWORD")
+        return False
 
     print("="*60)
     print("BACKUP MYSQL COMPLET AUTO")
-    print(f"Serveur: {MYSQL_HOST}")
+    print(f"Serveur: {mysql_config['host']}")
     print("="*60)
     print()
 
     # Créer dossier de backup
-    backup_dir = Path("backups_mysql")
+    backup_dir = Path(mysql_config['backup_dir'])
     backup_dir.mkdir(exist_ok=True)
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -32,9 +46,9 @@ def backup_all_mysql():
     # Commande mysqldump
     cmd = [
         "mysqldump",
-        f"--host={MYSQL_HOST}",
-        f"--user={MYSQL_USER}",
-        f"--password={MYSQL_PASS}",
+        f"--host={mysql_config['host']}",
+        f"--user={mysql_config['user']}",
+        f"--password={mysql_config['password']}",
         "--all-databases",
         "--single-transaction",
         "--routines",
@@ -69,7 +83,7 @@ def backup_all_mysql():
             # Sauvegarde rapport JSON
             rapport = {
                 'timestamp': datetime.now().isoformat(),
-                'host': MYSQL_HOST,
+                'host': mysql_config['host'],
                 'backup_file': str(backup_file),
                 'size_mb': round(size_mb, 2),
                 'status': 'SUCCESS'
@@ -103,7 +117,8 @@ def backup_all_mysql():
         return False
 
 def main():
-    backup_all_mysql()
+    success = backup_all_mysql()
+    return 0 if success else 1
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
