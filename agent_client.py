@@ -108,6 +108,21 @@ class AgentClient:
         except Exception:
             return False
     
+    def debug(self) -> Optional[Dict[str, Any]]:
+        """
+        Get debug/status info from agent
+
+        Returns:
+            Debug info dictionary or None if failed
+        """
+        try:
+            response = self._send_request('debug')
+            if response.get('status') == 'success':
+                return response.get('debug')
+            return None
+        except Exception:
+            return None
+
     def get_metrics_safe(self) -> Dict[str, Any]:
         """
         Get system metrics from agent with error handling

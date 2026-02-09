@@ -12,7 +12,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 from config_loader import load_config
-from agent_client import query_agent
+from agent_client import query_agent, AgentClient
 
 def check_tcp_port(host, port, timeout=2):
     """Test connexion TCP simple"""
@@ -116,22 +116,61 @@ def main():
         
         # Interroger l'agent si activé
         if agent_enabled:
-            print(f"    [*] Interrogation agent sur port {agent_config['port']}...")
-            agent_response = query_agent(
-                ip, 
-                agent_config['port'], 
-                agent_config.get('auth_token'),
-                agent_config.get('timeout', 5)
-            )
-            
+            port = agent_config['port']
+            token = agent_config.get('auth_token')
+            timeout = agent_config.get('timeout', 5)
+
+            # Debug: vérifier que l'agent tourne et expose bien le port
+            print(f"    [*] Verification agent sur port {port}...")
+            client = AgentClient(ip, port, token, timeout)
+            debug_info = client.debug()
+
+            if debug_info:
+                print(f"    [✓] Agent DEBUG: v{debug_info.get('agent_version')} | "
+                      f"port={debug_info.get('port')} | "
+                      f"socket={debug_info.get('socket_listening')} | "
+                      f"metriques={debug_info.get('metrics_collection_ok')}")
+                result['agent_debug'] = debug_info
+            else:
+                print(f"    [!] Agent DEBUG: commande debug indisponible (ancienne version?)")
+
+            # Collecter les métriques
+            print(f"    [*] Interrogation agent sur port {port}...")
+            agent_response = query_agent(ip, port, token, timeout)
+
             if agent_response['status'] == 'success':
-                result['agent'] = agent_response['metrics']
-                print(f"    [✓] Agent: Métriques système collectées")
+                metrics = agent_response['metrics']
+                result['agent'] = metrics
+
+                # Validation des données récupérées
+                validation_errors = []
+                if not metrics.get('hostname'):
+                    validation_errors.append("hostname manquant")
+                if not metrics.get('os', {}).get('system'):
+                    validation_errors.append("info OS manquante")
+                cpu_pct = metrics.get('cpu', {}).get('usage_percent')
+                if cpu_pct is None or not (0 <= cpu_pct <= 100):
+                    validation_errors.append(f"CPU invalide: {cpu_pct}")
+                ram_pct = metrics.get('memory', {}).get('percent')
+                if ram_pct is None or not (0 <= ram_pct <= 100):
+                    validation_errors.append(f"RAM invalide: {ram_pct}")
+                if not metrics.get('disk', {}).get('partitions'):
+                    validation_errors.append("aucune partition disque")
+                if not metrics.get('uptime', {}).get('uptime_seconds'):
+                    validation_errors.append("uptime manquant")
+
+                if validation_errors:
+                    print(f"    [!] Agent: Métriques collectées AVEC anomalies: {', '.join(validation_errors)}")
+                    result['agent_validation'] = {'ok': False, 'errors': validation_errors}
+                else:
+                    print(f"    [✓] Agent: Métriques système collectées et validées")
+                    result['agent_validation'] = {'ok': True, 'errors': []}
             else:
                 result['agent'] = {
                     'status': 'unavailable',
                     'error': agent_response.get('error', 'Unknown error')
                 }
+                result['agent_validation'] = {'ok': False, 'errors': ['agent indisponible']}
                 print(f"    [!] Agent: {agent_response.get('error', 'Indisponible')}")
         
         rapport['serveurs'][name] = result
@@ -198,10 +237,13 @@ def main():
             if data['agent'].get('status') == 'unavailable':
                 info += f" | Agent: Indisponible"
             else:
-                os_info = data['agent'].get('os', {})
                 cpu_usage = data['agent'].get('cpu', {}).get('usage_percent', 'N/A')
                 mem_percent = data['agent'].get('memory', {}).get('percent', 'N/A')
-                info += f" | Agent: OK (CPU:{cpu_usage}% RAM:{mem_percent}%)"
+                validation = data.get('agent_validation', {})
+                valid_tag = "OK" if validation.get('ok') else "WARN"
+                info += f" | Agent: {valid_tag} (CPU:{cpu_usage}% RAM:{mem_percent}%)"
+                if not validation.get('ok') and validation.get('errors'):
+                    info += f" [{', '.join(validation['errors'])}]"
         
         print(info)
     

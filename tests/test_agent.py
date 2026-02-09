@@ -154,6 +154,51 @@ class TestAgentProtocol:
         assert response_data['status'] == 'error'
         assert 'Invalid JSON' in response_data['message']
     
+    def test_debug_command(self, agent_server):
+        """Test debug command returns full agent status"""
+        client = AgentClient('127.0.0.1', 6001, auth_token="test_token_12345")
+        debug_info = client.debug()
+
+        assert debug_info is not None
+        assert debug_info['port'] == 6001
+        assert debug_info['socket_listening'] is True
+        assert debug_info['auth_enabled'] is True
+        assert debug_info['metrics_collection_ok'] is True
+        assert debug_info['agent_version'] is not None
+        assert debug_info['actual_bind'] is not None
+        assert debug_info['connections_handled'] >= 0
+        assert debug_info['agent_uptime_seconds'] >= 0
+        assert debug_info['metrics_sample']['hostname'] is not None
+
+    def test_debug_command_no_auth(self):
+        """Test debug command without authentication"""
+        agent = NTLAgent(port=6005, auth_token=None)
+        server_thread = threading.Thread(target=agent.start, daemon=True)
+        server_thread.start()
+        time.sleep(0.5)
+
+        try:
+            client = AgentClient('127.0.0.1', 6005, auth_token=None)
+            debug_info = client.debug()
+
+            assert debug_info is not None
+            assert debug_info['auth_enabled'] is False
+            assert debug_info['metrics_collection_ok'] is True
+        finally:
+            agent.stop()
+
+    def test_connections_counter(self, agent_server):
+        """Test that connections counter increments"""
+        client = AgentClient('127.0.0.1', 6001, auth_token="test_token_12345")
+
+        # Make a few requests
+        client.ping()
+        client.ping()
+
+        debug_info = client.debug()
+        assert debug_info is not None
+        assert debug_info['connections_handled'] >= 3  # 2 pings + 1 debug
+
     def test_unknown_command(self, agent_server):
         """Test handling of unknown command"""
         request = {
