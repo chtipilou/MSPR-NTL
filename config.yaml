@@ -1,0 +1,69 @@
+# Configuration Example for NTL-SysToolbox
+# Copy this file to config.yaml and update with your actual values
+
+# MySQL Configuration
+mysql:
+  host: "192.168.10.14"
+  user: "root"
+  password: "mspr25@"
+  port: 3306
+  backup_dir: "backups_mysql"
+
+# Agent Configuration
+agent:
+  port: 6000
+  auth_token: "mspr25@"
+  timeout: 5
+
+# Diagnostic Configuration
+diagnostic:
+  output_dir: "rapports_ntl"
+  servers:
+    - name: "ESXi Host"
+      ip: "10.10.10.97"
+      ports:
+        https_443: 443
+        ssh_22: 22
+      agent_enabled: true
+    
+    - name: "Grafana"
+      ip: "192.168.10.13"
+      ports:
+        grafana_3000: 3000
+        ssh_22: 22
+      agent_enabled: true
+    
+    - name: "WMS-DB"
+      ip: "192.168.10.14"
+      ports:
+        mysql_3306: 3306
+        ssh_22: 22
+      agent_enabled: true
+    
+    - name: "Serveur AD 1"
+      ip: "192.168.10.10"
+      ports:
+        ldap_389: 389
+        ldaps_636: 636
+        dns_53: 53
+        kerberos_88: 88
+        rdp_3389: 3389
+      agent_enabled: true
+    
+    - name: "Serveur AD MSPR"
+      ip: "192.168.10.11"
+      ports:
+        ldap_389: 389
+        ldaps_636: 636
+        dns_53: 53
+        kerberos_88: 88
+        rdp_3389: 3389
+      agent_enabled: true
+    
+    - name: "WMS-APP"
+      ip: "192.168.10.15"
+      ports:
+        http_80: 80
+        https_443: 443
+        ssh_22: 22
+      agent_enabled: true
