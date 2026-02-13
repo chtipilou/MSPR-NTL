@@ -9,15 +9,29 @@ def run_script(script_name):
         print(f"\n--- Lancement de {script_name} ---\n")
         try:
             # Exécute le script et attend la fin de son exécution
-            subprocess.run([sys.executable, script_name], check=True)
-        except subprocess.CalledProcessError as e:
-            print(f"\n[Erreur] Le script s'est arrêté avec une erreur : {e}")
+            completed = subprocess.run([sys.executable, script_name], check=False)
+
+            if completed.returncode != 0:
+                # Certains scripts utilisent volontairement des codes non-zéro
+                # pour signaler des alertes (et non un crash technique).
+                if script_name == "diagnostique_infra.py":
+                    if completed.returncode == 1:
+                        print("\n[Info] Diagnostic terminé avec alertes (code 1).")
+                    elif completed.returncode == 2:
+                        print("\n[Info] Diagnostic terminé avec serveurs down (code 2).")
+                    else:
+                        print(f"\n[Erreur] Le diagnostic s'est terminé avec le code {completed.returncode}.")
+                else:
+                    print(f"\n[Erreur] Le script s'est terminé avec le code {completed.returncode}.")
         except Exception as e:
             print(f"\n[Erreur] Impossible d'exécuter le script : {e}")
     else:
         print(f"\n[Fichier introuvable] {script_name} n'existe pas dans le dossier courant.")
     
-    input("\nAppuyez sur Entrée pour revenir au menu...")
+    try:
+        input("\nAppuyez sur Entrée pour revenir au menu...")
+    except KeyboardInterrupt:
+        print("\nRetour menu annulé par l'utilisateur.")
 
 def main():
     while True:
