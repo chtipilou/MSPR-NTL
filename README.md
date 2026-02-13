@@ -58,7 +58,7 @@ cp config.example.yaml config.yaml
 
 ```yaml
 mysql:
-  host: "192.168.1.14"
+  host: "192.168.10.14"
   user: "root"
   password: "VOTRE_PASSWORD"
 
@@ -91,11 +91,11 @@ python3 audit.py
 
 | Serveur | IP | Rôle |
 |---------|-------------|------|
-| AD-01/02 | 192.168.1.10/11 | Contrôleurs de domaine |
-| WMS-DB | 192.168.1.14 | Base de données MySQL |
-| WMS-APP | 192.168.1.15 | Serveur Web |
-| GRAFANA | 192.168.1.13 | Supervision |
-| PFSENSE | 192.168.1.1 | Firewall |
+| AD-01/02 | 192.168.10.10/11 | Contrôleurs de domaine |
+| WMS-DB | 192.168.10.14 | Base de données MySQL |
+| WMS-APP | 192.168.10.15 | Serveur Web |
+| GRAFANA | 192.168.10.13 | Supervision |
+| PFSENSE | 192.168.10.1 | Firewall |
 
 ## 📚 Documentation
 

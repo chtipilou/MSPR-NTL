@@ -50,17 +50,17 @@ EOL_DATABASE = {
 # INFRASTRUCTURE NORDTRANSIT LOGISTICS
 KNOWN_HOSTS = {
     # Active Directory
-    "192.168.1.10": {"hostname": "AD-01", "os": "Windows Server 2019", "role": "Contrôleur de domaine principal"},
-    "192.168.1.11": {"hostname": "AD-02", "os": "Windows Server 2019", "role": "Contrôleur de domaine secondaire"},
+    "192.168.10.10": {"hostname": "AD-01", "os": "Windows Server 2019", "role": "Contrôleur de domaine principal"},
+    "192.168.10.11": {"hostname": "AD-02", "os": "Windows Server 2019", "role": "Contrôleur de domaine secondaire"},
     
     # Services applicatifs
-    "192.168.1.13": {"hostname": "GRAFANA", "os": "Ubuntu 22.04 LTS", "role": "Supervision Grafana"},
-    "192.168.1.14": {"hostname": "MYSQL-DB", "os": "Ubuntu 20.04 LTS", "role": "Base de données MySQL"},
-    "192.168.1.15": {"hostname": "WEB-APP", "os": "Ubuntu 20.04 LTS", "role": "Serveur Web applicatif"},
+    "192.168.10.13": {"hostname": "GRAFANA", "os": "Windows Server 2025", "role": "Supervision Grafana"},
+    "192.168.10.14": {"hostname": "MYSQL-DB", "os": "Ubuntu 20.04 LTS", "role": "Base de données MySQL"},
+    "192.168.10.15": {"hostname": "WEB-APP", "os": "Ubuntu 20.04 LTS", "role": "Serveur Web applicatif"},
     
     # Infrastructure réseau
-    "192.168.1.1": {"hostname": "PFSENSE-FW", "os": "pfSense 2.7", "role": "Firewall principal (LAN)"},
-    "10.10.10.67": {"hostname": "PFSENSE-FW", "os": "pfSense 2.7", "role": "Firewall principal (WAN)"},
+    "192.168.10.1": {"hostname": "PFSENSE-FW", "os": "pfSense 2.7", "role": "Firewall principal (LAN)"},
+    "10.10.10.97": {"hostname": "PFSENSE-FW", "os": "pfSense 2.7", "role": "Firewall principal (WAN)"},
 }
 
 class NetworkScanner:

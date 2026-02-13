@@ -58,7 +58,7 @@ Agent daemon qui expose les métriques système via TCP.
 | **AD-01 / 02** | `192.168.1.10/11` | Windows Server 2019 | Contrôleurs de Domaine |
 | **WMS-DB** | `192.168.1.14` | Ubuntu 20.04 LTS | Base de données MySQL |
 | **WMS-APP** | `192.168.1.15` | Ubuntu 20.04 LTS | Serveur Web applicatif |
-| **GRAFANA** | `192.168.1.13` | Ubuntu 22.04 LTS | Supervision |
+| **GRAFANA** | `192.168.1.13` | Windows Server 2025 | Supervision |
 | **PFSENSE** | `192.168.1.1` | pfSense 2.7 | Firewall LAN |
 
 ---
