@@ -1,0 +1,5 @@
+[Unit]
+Description=WMS pgBackRest sauvegarde différentielle
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/wms-backup.sh diff

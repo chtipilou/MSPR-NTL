@@ -1,0 +1,16 @@
+# Secrets et fichiers locaux (ne jamais versionner)
+secrets.env
+*.secret
+*.key
+*.pem
+.env
+config.yaml
+
+# Artefacts de build
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Fichiers systeme
+.DS_Store
+Thumbs.db

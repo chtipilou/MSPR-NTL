@@ -1,149 +1,60 @@
-# NTL-SysToolbox
+# MSPR NTL - Base de données WMS NordTransit Logistics
 
-Suite d'outils d'administration et de supervision pour l'infrastructure **NordTransit Logistics**.
+Conception, exploitation et protection de la base de données du système de gestion d'entrepôt (WMS) de NordTransit Logistics, via un SGBD relationnel en haute disponibilité.
 
-## 🚀 Aperçu
+Blocs E6.3 (gérer les données selon une approche DevOps ou SysOps) et E6.4 (gérer un projet selon une approche DevOps ou SysOps).
 
-NTL-SysToolbox fournit une solution complète pour :
+## Résultat livré
 
-- ✅ **Diagnostic Infrastructure** : Supervision des serveurs et collecte de métriques système
-- ✅ **Backup MySQL** : Sauvegarde automatisée des bases de données
-- ✅ **Audit d'Obsolescence** : Analyse EOL et gestion du cycle de vie
-- ✅ **Agent Système** : Daemon de collecte de métriques multi-plateforme
+Un cluster PostgreSQL 17 en haute disponibilité avec bascule automatique, répartiteur de charge, sécurité au moindre privilège, sauvegardes automatisées et testées, et supervision. L'ensemble a été déployé et validé sur l'infrastructure Proxmox de NTL, pas seulement décrit sur le papier.
 
-## 📋 Fonctionnalités
+Le sujet d'origine décrivait une base MySQL. Le SGBD retenu et déployé est PostgreSQL 17. La justification de ce choix figure dans le document d'architecture.
 
-### Diagnostic Infrastructure
-- Vérification de la disponibilité des ports critiques (SSH, HTTP/S, LDAP, MySQL, etc.)
-- Collecte automatique des métriques système via agents (CPU, RAM, Disque, Uptime, OS)
-- Génération de rapports JSON horodatés
-- Codes de retour exploitables pour automatisation
+Objectifs du cahier des charges : RTO 1 h, RPO 15 min. Résultats mesurés : RTO de l'ordre de 10 à 30 secondes sur bascule, RPO inférieur à 1 minute.
 
-### Sauvegarde MySQL
-- Backup complet avec routines, triggers et événements
-- Configuration centralisée (pas de secrets hardcodés)
-- Mode non-bloquant (`--single-transaction`)
-- Rapports JSON de sauvegarde
+## Organisation du dépôt
 
-### Audit d'Obsolescence
-- Scan réseau automatisé
-- Base de données EOL complète (Windows, Linux, VMware, pfSense)
-- Analyse de risque (CRITIQUE, ÉLEVÉ, MOYEN, FAIBLE, OK)
-- Export CSV pour analyse Excel
+| Dossier | Contenu |
+|---------|---------|
+| `docs/` | Les livrables rédigés (architecture, modèle de données, PRA, sécurité, exploitation, supervision, optimisation, analyse de logs, gestion de projet, note de direction) |
+| `docs/soutenance/` | Support de présentation pour la soutenance |
+| `sql/` | Schéma métier, jeu de données, politique de sécurité, déclencheurs |
+| `configs/` | Configurations d'infrastructure (Patroni, HAProxy, PgBouncer, etcd, pgBackRest, Prometheus, Grafana) |
+| `scripts/` | Script de sauvegarde et unités systemd associées |
+| `mspr1/` | Archive de la MSPR précédente (suite d'outils NTL-SysToolbox), conservée pour mémoire |
 
-### Agent Système
-- Collecte de métriques système en temps réel
-- Protocole TCP sécurisé avec authentification par token
-- Support Windows et Linux
-- Configuration par port (défaut: 6000)
+## Les livrables
 
-## 🔧 Quick Start
+Les documents sont numérotés dans l'ordre de lecture conseillé.
 
-### Installation
+| Document | Objet |
+|----------|-------|
+| [01 - Architecture technique](docs/01-architecture-technique.md) | Choix du SGBD, architecture HA, hébergement, composants, réseau |
+| [02 - Modèle de données](docs/02-modele-donnees.md) | MCD, MLD, dictionnaire de données, règles d'intégrité |
+| [03 - Plan de reprise d'activité](docs/03-plan-reprise-activite.md) | Scénarios de sinistre, RTO/RPO, procédures de reprise, tests |
+| [04 - Politique de sécurité et d'accès](docs/04-politique-securite-acces.md) | Moindre privilège, cloisonnement par client, chiffrement |
+| [05 - RunBook d'exploitation](docs/05-runbook-exploitation.md) | Démarrage/arrêt, contrôle de santé, incidents, escalade |
+| [06 - Guide de supervision](docs/06-guide-supervision.md) | Cinq indicateurs critiques, seuils, procédures de remédiation |
+| [07 - Démarche d'optimisation](docs/07-demarche-optimisation.md) | Usages, choix d'index, mesures, résultats |
+| [08 - Analyse de journaux](docs/08-analyse-logs.md) | Sources, motifs, seuils, corrélation |
+| [09 - Gestion de projet](docs/09-gestion-projet.md) | Rôles, planning, risques, décisions, suivi des tâches |
+| [10 - Note de direction](docs/10-note-direction.md) | Risques cyber sur la base, impact métier, mesures |
+| [11 - Technical documentation (EN)](docs/11-technical-documentation-en.md) | English summary of the architecture and operations |
 
-```bash
-# Cloner le dépôt
-git clone https://github.com/chtipilou/MSPR-NTL.git
-cd MSPR-NTL
+## Architecture en bref
 
-# Installer les dépendances
-pip3 install -r requirements.txt
+Trois machines virtuelles sur le réseau 192.168.10.0/24 :
 
-# Configurer
-cp config.example.yaml config.yaml
-# Éditer config.yaml avec vos paramètres
-```
+- `pgsql-01` (192.168.10.61) : PostgreSQL primaire, orchestré par Patroni.
+- `pgsql-02` (192.168.10.60) : réplica en streaming, candidat à la bascule.
+- `pgsql-lb` (192.168.10.62) : etcd, HAProxy, PgBouncer, dépôt de sauvegarde pgBackRest.
 
-### Configuration Minimale
+Patroni arbitre l'élection du primaire via etcd. HAProxy interroge l'API REST de Patroni pour router les écritures vers le primaire courant (port 5000) et les lectures vers le réplica (port 5001). En cas de bascule, le répartiteur suit automatiquement le nouveau primaire.
 
-```yaml
-mysql:
-  host: "192.168.10.14"
-  user: "root"
-  password: "VOTRE_PASSWORD"
+## Mise en garde sur les secrets
 
-agent:
-  port: 6000
-  auth_token: "VOTRE_TOKEN_SECURISE"
-```
-
-### Déployer l'agent sur un serveur
-
-```bash
-# Sur chaque serveur à monitorer
-export NTL_AGENT_TOKEN="votre_token"
-python3 ntl_agent.py --port 6000
-```
-
-### Lancer les outils
-
-```bash
-# Menu interactif
-python3 selecteur.py
-
-# Ou directement
-python3 diagnostique_infra.py
-python3 backup_mysql.py
-python3 audit.py
-```
-
-## 📊 Infrastructure Supportée
-
-| Serveur | IP | Rôle |
-|---------|-------------|------|
-| AD-01/02 | 192.168.10.10/11 | Contrôleurs de domaine |
-| WMS-DB | 192.168.10.14 | Base de données MySQL |
-| WMS-APP | 192.168.10.15 | Serveur Web |
-| GRAFANA | 192.168.10.13 | Supervision |
-| PFSENSE | 192.168.10.1 | Firewall |
-
-## 📚 Documentation
-
-- [Guide d'Utilisation DSI](documentation/Guide%20d'Utilisation%20DSI.md) - Présentation des modules et usage quotidien
-- [Guide d'Installation](documentation/Guide-Installation.md) - Installation complète, déploiement et configuration
-- [Documentation Technique PDF](Documentation_MSPR_NTL-SysToolbox_final.pdf) - Dossier technique complet
-
-## 🔒 Sécurité
-
-- ⚠️ **Configuration** : `config.yaml` contient des secrets et n'est **pas** versionné (`.gitignore`)
-- ⚠️ **Agent** : Utilisation obligatoire d'un token d'authentification en production
-- ⚠️ **Réseau** : Ne pas exposer l'agent (port 6000) directement sur Internet
-- ⚠️ **Backups** : Déplacer les sauvegardes vers un stockage externe sécurisé
-
-## 🧪 Tests
-
-```bash
-# Exécuter les tests
-pytest tests/ -v
-
-# Avec couverture
-pytest tests/ --cov=. --cov-report=html
-```
-
-## 📦 Artefacts Générés
-
-- **Rapports de diagnostic** : `rapports_ntl/diagnostic_YYYYMMDD_HHMMSS.json`
-- **Backups MySQL** : `backups_mysql/backup_complet_YYYYMMDD_HHMMSS.sql`
-- **Audits EOL** : `audit_eol_ntl_YYYYMMDD_HHMMSS.csv`
-
-## 🔄 Codes de Retour
-
-| Code | Signification |
-|------|---------------|
-| 0 | Succès complet |
-| 1 | Avertissements / Problèmes mineurs |
-| 2 | Erreur critique / Serveurs down |
-
-## 🛠️ Prérequis
-
-- Python 3.8+
-- Dépendances : `pyyaml`, `psutil`, `pymysql`, `questionary`, `pytest`
-- Optionnel : `mysql-client` (pour backups)
-
-## 📝 Licence
-
-Projet interne - NordTransit Logistics
+Aucun mot de passe réel n'est versionné. Les configurations publiées remplacent les secrets par le marqueur `__MOT_DE_PASSE__`. Les scripts SQL injectent les mots de passe par variables psql au moment du déploiement. Le fichier `config.yaml` et tout fichier `secrets.env` sont exclus par `.gitignore`.
 
 ---
 
-**DSI NordTransit Logistics** - Janvier 2026
+NordTransit Logistics, juin 2026.

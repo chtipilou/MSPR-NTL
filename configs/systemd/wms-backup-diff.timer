@@ -1,0 +1,7 @@
+[Unit]
+Description=WMS backup différentiel (quotidien 02h00 sauf dimanche)
+[Timer]
+OnCalendar=Mon..Sat *-*-* 02:00:00
+Persistent=true
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,93 @@
+scope: wms-cluster
+namespace: /service/
+name: pgsql-02
+
+restapi:
+  listen: 192.168.10.60:8008
+  connect_address: 192.168.10.60:8008
+  authentication:
+    username: patroni
+    password: '__MOT_DE_PASSE__'
+
+etcd3:
+  hosts:
+    - 192.168.10.62:2379
+
+bootstrap:
+  dcs:
+    ttl: 30
+    loop_wait: 10
+    retry_timeout: 10
+    maximum_lag_on_failover: 1048576
+    master_start_timeout: 300
+    synchronous_mode: false
+    postgresql:
+      use_pg_rewind: true
+      use_slots: true
+      parameters:
+        wal_level: replica
+        hot_standby: "on"
+        max_connections: 200
+        max_wal_senders: 10
+        max_replication_slots: 10
+        wal_log_hints: "on"
+        wal_keep_size: 1024MB
+        archive_mode: "on"
+        archive_command: '/bin/true'  # remplacé par pgBackRest à l'étape backup
+        archive_timeout: 60s
+        shared_buffers: 512MB
+        effective_cache_size: 1536MB
+        maintenance_work_mem: 128MB
+        work_mem: 16MB
+        checkpoint_completion_target: 0.9
+        random_page_cost: 1.1
+        effective_io_concurrency: 200
+        log_min_duration_statement: 500
+        log_checkpoints: "on"
+        log_connections: "on"
+        log_disconnections: "on"
+        log_lock_waits: "on"
+        log_line_prefix: '%m [%p] %q%u@%d/%a '
+        track_io_timing: "on"
+        password_encryption: scram-sha-256
+
+  initdb:
+    - encoding: UTF8
+    - data-checksums
+    - locale: C.UTF-8
+
+  pg_hba:
+    - local   all             postgres                                peer
+    - local   all             all                                     scram-sha-256
+    - hostssl replication     replicator      192.168.10.0/24         scram-sha-256
+    - host    replication     replicator      192.168.10.0/24         scram-sha-256
+    - hostssl all             all             192.168.10.0/24         scram-sha-256
+    - host    all             all             127.0.0.1/32            scram-sha-256
+
+postgresql:
+  listen: 192.168.10.60,127.0.0.1:5432
+  connect_address: 192.168.10.60:5432
+  data_dir: /var/lib/postgresql/17/wms
+  bin_dir: /usr/lib/postgresql/17/bin
+  pgpass: /var/lib/postgresql/.pgpass_patroni
+  authentication:
+    superuser:
+      username: postgres
+      password: '__MOT_DE_PASSE__'
+    replication:
+      username: replicator
+      password: '__MOT_DE_PASSE__'
+    rewind:
+      username: rewind_user
+      password: '__MOT_DE_PASSE__'
+  parameters:
+    unix_socket_directories: /var/run/postgresql
+    ssl: "on"
+    ssl_cert_file: /etc/postgresql-ssl/server.crt
+    ssl_key_file: /etc/postgresql-ssl/server.key
+
+tags:
+  nofailover: false
+  noloadbalance: false
+  clonefrom: false
+  nosync: false

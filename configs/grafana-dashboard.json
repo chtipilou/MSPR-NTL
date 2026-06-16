@@ -1,0 +1,92 @@
+{
+  "dashboard": {
+    "uid": "wms-kpi",
+    "title": "WMS NTL - Supervision Base de Données (5 KPIs)",
+    "tags": ["wms", "postgresql", "mspr"],
+    "timezone": "browser",
+    "refresh": "10s",
+    "schemaVersion": 39,
+    "time": {"from": "now-1h", "to": "now"},
+    "panels": [
+      {
+        "id": 1,
+        "type": "stat",
+        "title": "État du cluster (pg_up)",
+        "gridPos": {"h": 6, "w": 8, "x": 0, "y": 0},
+        "datasource": {"type": "prometheus", "uid": "bfpam1gcg4qo0e"},
+        "targets": [{"expr": "pg_up", "legendFormat": "{{instance}} ({{role}})", "refId": "A"}],
+        "fieldConfig": {"defaults": {
+          "mappings": [
+            {"type": "value", "options": {"0": {"text": "ARRÊT", "color": "red"}, "1": {"text": "UP", "color": "green"}}}
+          ],
+          "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "green", "value": 1}]}
+        }},
+        "options": {"colorMode": "background", "graphMode": "none", "textMode": "value_and_name"}
+      },
+      {
+        "id": 2,
+        "type": "gauge",
+        "title": "KPI 1 - Lag de réplication (s)  [alerte>30 / crit>120]",
+        "gridPos": {"h": 6, "w": 8, "x": 8, "y": 0},
+        "datasource": {"type": "prometheus", "uid": "bfpam1gcg4qo0e"},
+        "targets": [{"expr": "max(pg_replication_lag_seconds)", "refId": "A"}],
+        "fieldConfig": {"defaults": {
+          "unit": "s",
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 30}, {"color": "red", "value": 120}]}
+        }}
+      },
+      {
+        "id": 3,
+        "type": "gauge",
+        "title": "KPI 2 - Connexions actives / 200  [alerte>140 / crit>180]",
+        "gridPos": {"h": 6, "w": 8, "x": 16, "y": 0},
+        "datasource": {"type": "prometheus", "uid": "bfpam1gcg4qo0e"},
+        "targets": [{"expr": "sum(pg_stat_database_numbackends)", "refId": "A"}],
+        "fieldConfig": {"defaults": {
+          "min": 0, "max": 200, "unit": "none",
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 140}, {"color": "red", "value": 180}]}
+        }}
+      },
+      {
+        "id": 4,
+        "type": "gauge",
+        "title": "KPI 3 - Espace disque utilisé %  [alerte>75 / crit>90]",
+        "gridPos": {"h": 6, "w": 8, "x": 0, "y": 6},
+        "datasource": {"type": "prometheus", "uid": "bfpam1gcg4qo0e"},
+        "targets": [{"expr": "100 - (node_filesystem_avail_bytes{mountpoint=\"/\"} / node_filesystem_size_bytes{mountpoint=\"/\"} * 100)", "legendFormat": "{{instance}}", "refId": "A"}],
+        "fieldConfig": {"defaults": {
+          "min": 0, "max": 100, "unit": "percent",
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 75}, {"color": "red", "value": 90}]}
+        }}
+      },
+      {
+        "id": 5,
+        "type": "stat",
+        "title": "KPI 4 - Sauvegarde WAL : échecs d'archivage  [crit>0]",
+        "gridPos": {"h": 6, "w": 8, "x": 8, "y": 6},
+        "datasource": {"type": "prometheus", "uid": "bfpam1gcg4qo0e"},
+        "targets": [
+          {"expr": "sum(pg_stat_archiver_failed_count)", "legendFormat": "échecs", "refId": "A"},
+          {"expr": "sum(pg_stat_archiver_archived_count)", "legendFormat": "WAL archivés", "refId": "B"}
+        ],
+        "fieldConfig": {"defaults": {
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "red", "value": 1}]}
+        }},
+        "options": {"colorMode": "background", "graphMode": "none", "textMode": "value_and_name"}
+      },
+      {
+        "id": 6,
+        "type": "timeseries",
+        "title": "KPI 5 - Débit transactions (commits/s) & latence",
+        "gridPos": {"h": 6, "w": 8, "x": 16, "y": 6},
+        "datasource": {"type": "prometheus", "uid": "bfpam1gcg4qo0e"},
+        "targets": [
+          {"expr": "sum(rate(pg_stat_database_xact_commit[5m]))", "legendFormat": "commits/s", "refId": "A"},
+          {"expr": "sum(rate(pg_stat_database_xact_rollback[5m]))", "legendFormat": "rollbacks/s", "refId": "B"}
+        ],
+        "fieldConfig": {"defaults": {"unit": "ops"}}
+      }
+    ]
+  },
+  "overwrite": true
+}

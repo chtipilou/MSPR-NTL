@@ -1,0 +1,7 @@
+[Unit]
+Description=WMS backup complet (hebdomadaire, dimanche 02h00)
+[Timer]
+OnCalendar=Sun *-*-* 02:00:00
+Persistent=true
+[Install]
+WantedBy=timers.target
